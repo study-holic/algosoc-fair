@@ -1,0 +1,21 @@
+.g2 { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.g2-head { display: grid; grid-template-columns: 10rem 1fr 10rem; align-items: end; }
+.g2-head .right { text-align: right; }
+.g2-head .v { font-size: 2.4rem; }
+.g2-prompt { text-align: center; font-size: 2rem; font-weight: 600; padding-bottom: 0.2rem; }
+.g2-pair { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.g2-card { position: relative; display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--bg); cursor: pointer; border-radius: 2px; transition: border-color 80ms linear, background 80ms linear; }
+.g2-card:hover { border-color: var(--muted); }
+.g2-card .chartbox { flex: 1; }
+.g2-cap { height: 4rem; padding: 0 1rem; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--line-soft); }
+.g2-name { font-size: 1.5rem; font-weight: 600; min-height: 1.9rem; }
+.g2-meta { font-size: 1rem; color: var(--muted); font-family: var(--mono); min-height: 1.3rem; }
+.g2-key { position: absolute; top: 0.6rem; left: 0.8rem; font-family: var(--mono); font-size: 1rem; color: var(--muted); }
+.g2-card[data-side="1"] .g2-key { left: auto; right: 0.8rem; }
+.g2-card.is-fake .g2-name { color: var(--muted); }
+.g2-card.chose-ok { border-color: var(--green); background: rgba(63,185,107,0.08); outline: 1px solid var(--green); }
+.g2-card.chose-bad { border-color: var(--red); background: rgba(229,83,75,0.08); outline: 1px solid var(--red); }
+.g2-verdict { height: 2.2rem; text-align: center; font-family: var(--mono); font-size: 1.5rem; }
+.g2-res td.sans { font-family: var(--sans); }
+.g2-res td { padding-top: 0.42rem; padding-bottom: 0.42rem; }
+.g2-note { margin-top: 1rem; font-size: 1rem; }

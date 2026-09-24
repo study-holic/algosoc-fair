@@ -1,0 +1,9 @@
+.g1 { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.g1 .stats { display: grid; grid-template-columns: 1.1fr 1.2fr 1fr 0.8fr; gap: 1rem; }
+.g1 .stats .right { text-align: right; }
+.g1 .stats .v { font-size: 2.4rem; }
+.g1 .chartbox { flex: 1; border: 1px solid var(--line); background: var(--bg); }
+.g1 .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.g1-vs td:first-child { font-family: var(--sans); }
+.results .replay-head { display: flex; justify-content: space-between; align-items: baseline; margin: 1.4rem 0 0.4rem; }
+.results .legend { font-family: var(--mono); font-size: 0.95rem; color: var(--muted); }

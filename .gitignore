@@ -1,0 +1,27 @@
+# Dependencies (restored with npm install)
+node_modules/
+
+# Playwright run output (tests/screenshots/ is kept on purpose)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Local environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Temporary, editor and OS files
+*.log
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+*.pyc
+.vscode/
+.idea/

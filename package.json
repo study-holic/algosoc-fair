@@ -1,0 +1,15 @@
+{
+  "name": "algosoc-fair",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UoM AlgoSoc Freshers' Fair stall games",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node scripts/build.js && playwright test",
+    "sim": "node scripts/sim_game1.js && node scripts/sim_game3.js && node scripts/sim_game4.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "qrcode": "^1.5.4"
+  }
+}

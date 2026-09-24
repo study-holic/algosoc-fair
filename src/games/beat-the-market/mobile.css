@@ -1,0 +1,18 @@
+/* Phone layout: 2x2 stats, chart fills, three large buttons at the bottom. */
+.m .g1 { gap: 0.6rem; }
+.m .g1 .stats { grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; }
+.m .g1 .stats .kv:nth-child(2), .m .g1 .stats .kv:nth-child(4) { text-align: right; }
+.m .g1 .stats .v { font-size: 1.6rem; }
+.m .g1 .chartbox { min-height: 12rem; }
+.m .g1 .actions { gap: 0.5rem; }
+.m .g1 .actions .btn.big { min-height: 4.2rem; font-size: 1.2rem; letter-spacing: 0.06em; padding: 0; }
+.m .results .replay-head { flex-wrap: wrap; gap: 0.3rem; margin: 1rem 0 0.3rem; }
+.m .g1-vs th:nth-child(4), .m .g1-vs td:nth-child(4) { display: none; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .m .g1 { display: grid; grid-template-columns: 1fr 15rem; grid-template-rows: auto auto 1fr auto; grid-template-areas: "chart stats" "chart bar" "chart ." "chart actions"; gap: 0.5rem 0.9rem; }
+  .m .g1 .stats { grid-area: stats; }
+  .m .g1 .timebar { grid-area: bar; }
+  .m .g1 .chartbox { grid-area: chart; min-height: 0; }
+  .m .g1 .actions { grid-area: actions; }
+  .m .g1 .actions .btn.big { min-height: 3.6rem; font-size: 1.05rem; }
+}

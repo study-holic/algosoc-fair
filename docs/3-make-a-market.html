@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; font-src 'none'">
+<title>Make a Market · UoM AlgoSoc</title>
+<style>
+/* UoM AlgoSoc fair games: shared visual system.
+   Sizing is in rem, and the root size tracks the viewport, so 1366x768 and
+   1920x1080 get the same layout (16px and 22.5px per rem). */
+:root {
+  --bg: #1e2429;          /* matches the logo background exactly */
+  --panel: #252b31;
+  --panel-2: #2c333a;
+  --line: #3a424b;
+  --line-soft: #2f363d;
+  --text: #e6e6e6;
+  --muted: #9a9a9a;
+  --dim: #6b7178;
+  --green: #3fb96b;
+  --red: #e5534b;
+  --amber: #f0a830;
+  --mono: Consolas, Menlo, ui-monospace, "Cascadia Mono", "SF Mono", monospace;
+  --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+html { font-size: min(calc(100vh / 48), calc(100vw / 85)); }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
+body { font-family: var(--sans); font-size: 1.15rem; line-height: 1.35; -webkit-font-smoothing: antialiased; user-select: none; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, input { font: inherit; color: inherit; }
+.mono, .num, table.data td, table.data th { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { text-align: right; white-space: nowrap; }
+.label { font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.amber { color: var(--amber); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 2px; }
+
+/* App shell */
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+.topbar { height: 3.2rem; flex: none; display: flex; align-items: center; gap: 1.2rem; padding: 0 1.6rem; border-bottom: 1px solid var(--line); }
+.topbar .brand { display: flex; align-items: center; gap: 0.8rem; }
+.topbar .brand .logo-crop { width: 2.2rem; height: 2.2rem; }
+.topbar .sep { width: 1px; height: 1.4rem; background: var(--line); }
+.topbar .status { margin-left: auto; display: flex; gap: 2rem; align-items: center; font-family: var(--mono); font-size: 1.1rem; }
+.screens { position: relative; flex: 1; min-height: 0; }
+.screen { position: absolute; inset: 0; padding: 1.4rem 1.6rem; opacity: 0; visibility: hidden; transition: opacity 120ms linear, visibility 0s linear 120ms; display: flex; flex-direction: column; min-height: 0; }
+.screen.active { opacity: 1; visibility: visible; transition: opacity 120ms linear, visibility 0s; }
+
+/* Logo: the source image is square with wide margins, so it is cropped here */
+.logo-crop { position: relative; overflow: hidden; flex: none; }
+.logo-crop img { position: absolute; width: 156%; left: -27.3%; top: -30.9%; max-width: none; }
+/* Soft mask so the logo's own background vignette never shows as a box edge. */
+.logo-crop { -webkit-mask-image: radial-gradient(closest-side, #000 88%, transparent 100%); mask-image: radial-gradient(closest-side, #000 88%, transparent 100%); }
+/* Mark only (no wordmark), for small sizes */
+.logo-mark { -webkit-mask-image: none; mask-image: none; }
+.logo-crop.logo-mark img { width: 420%; left: -160%; top: -123.8%; }
+
+/* Buttons: big hit areas, hairline borders */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; min-height: 3.2rem; padding: 0 1.4rem; background: var(--panel); border: 1px solid var(--line); border-radius: 2px; cursor: pointer; font-family: var(--mono); font-size: 1.15rem; letter-spacing: 0.04em; transition: background 80ms linear, border-color 80ms linear; }
+.btn:hover { background: var(--panel-2); border-color: var(--muted); }
+.btn.primary, .btn:focus-visible { border-color: var(--amber); outline: none; }
+.btn.primary { color: var(--amber); }
+.btn .key { font-size: 0.8rem; color: var(--muted); border: 1px solid var(--line); padding: 0.05rem 0.4rem; border-radius: 2px; }
+.btn.buy.on { background: rgba(63,185,107,0.16); border-color: var(--green); color: var(--green); }
+.btn.sell.on { background: rgba(229,83,75,0.16); border-color: var(--red); color: var(--red); }
+.btn.flat.on { background: var(--panel-2); border-color: var(--text); }
+
+/* Attract */
+.attract { display: grid; grid-template-columns: 1fr 1.05fr; grid-template-rows: 1fr auto; gap: 1.2rem 3rem; }
+.attract .left { display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+.attract .left .logo-crop { width: 10.5rem; height: 10.5rem; margin-bottom: 0.4rem; margin-left: -0.6rem; }
+.attract h1 { font-size: 3.6rem; line-height: 1.05; margin: 0.6rem 0 0.8rem; font-weight: 600; letter-spacing: -0.01em; }
+.attract .pitch { font-size: 1.6rem; color: var(--text); margin: 0 0 2rem; max-width: 30rem; }
+.attract .cta { align-self: flex-start; font-size: 1.5rem; min-height: 4.2rem; padding: 0 2rem; }
+.attract .others { margin-top: 1.4rem; font-size: 1rem; color: var(--muted); }
+.attract .others b { color: var(--text); font-weight: 600; }
+.attract .right { display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+.attract .ticker { grid-column: 1 / -1; height: 7rem; border-top: 1px solid var(--line); position: relative; }
+.attract .ticker canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cta-blink { animation: none; }
+
+/* Leaderboard tables */
+table.data { width: 100%; border-collapse: collapse; font-size: 1.15rem; }
+table.data th { font-family: var(--sans); font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; text-align: left; padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--line); }
+table.data th.num { text-align: right; }
+table.data td { padding: 0.36rem 0.7rem; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+table.data td.name { font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; max-width: 12rem; }
+table.data td.rank { color: var(--muted); width: 3rem; }
+table.data tr.me td { background: rgba(240,168,48,0.10); }
+table.data tr.me td.rank { color: var(--amber); }
+table.data tr.empty td { color: var(--dim); }
+.lb-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
+
+/* How to play */
+.howto { justify-content: center; align-items: center; }
+.howto .box { width: min(54rem, 100%); padding: 2.4rem 2.8rem; }
+.howto h2 { font-size: 2.4rem; margin: 0.4rem 0 1.4rem; font-weight: 600; }
+.howto ol { margin: 0 0 1.6rem; padding: 0; list-style: none; counter-reset: s; }
+.howto li { counter-increment: s; font-size: 1.55rem; margin: 0 0 0.9rem; padding-left: 2.6rem; position: relative; }
+.howto li::before { content: counter(s); position: absolute; left: 0; top: 0.1rem; font-family: var(--mono); font-size: 1.1rem; color: var(--muted); border: 1px solid var(--line); width: 1.8rem; text-align: center; }
+.howto .example { border-left: 2px solid var(--line); padding: 0.6rem 1.2rem; font-size: 1.3rem; color: var(--muted); margin-bottom: 2rem; }
+.howto .example .label { display: block; margin-bottom: 0.3rem; }
+.howto .example b { color: var(--text); font-weight: 600; }
+
+/* Countdown overlay */
+.countdown { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; }
+.countdown span { font-family: var(--mono); font-size: 9rem; color: var(--amber); background: var(--bg); border: 1px solid var(--line); padding: 0 3rem; border-radius: 2px; }
+
+/* Results */
+.results { display: grid; grid-template-columns: 1fr 25rem; gap: 2rem; }
+.results .detail { min-height: 0; display: flex; flex-direction: column; }
+.results .side { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.results .score-big { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 3.6rem; line-height: 1; margin-top: 0.3rem; }
+.results .rank-line { font-size: 1.2rem; min-height: 1.6rem; }
+.results .rank-line.hi { color: var(--amber); font-weight: 600; }
+.nick { display: flex; gap: 0.6rem; }
+.nick input { flex: 1; min-width: 0; height: 3.2rem; background: var(--bg); border: 1px solid var(--amber); border-radius: 2px; padding: 0 0.9rem; font-family: var(--mono); font-size: 1.4rem; outline: none; user-select: text; }
+.nick input::placeholder { color: var(--dim); }
+.nick-msg { font-size: 1rem; color: var(--muted); min-height: 1.3rem; }
+.takeaway { font-size: 1.2rem; border-left: 2px solid var(--line); padding-left: 1rem; }
+.qr { display: flex; gap: 1rem; align-items: center; margin-top: auto; }
+.qr img { width: 9.5rem; height: 9.5rem; image-rendering: pixelated; border-radius: 0; flex: none; }
+.qr .cap { font-size: 1.05rem; color: var(--text); }
+.qr .cap .label { display: block; margin-bottom: 0.3rem; }
+.seed { font-family: var(--mono); font-size: 0.75rem; color: var(--dim); }
+
+/* Charts */
+.chartbox { position: relative; min-height: 0; }
+.chartbox canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.timebar { height: 0.35rem; background: var(--line-soft); position: relative; overflow: hidden; }
+.timebar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--amber); width: 100%; }
+.kv { display: flex; flex-direction: column; gap: 0.1rem; }
+.kv .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 1.9rem; line-height: 1.15; }
+.k { font-family: var(--mono); font-size: 0.85em; border: 1px solid var(--line); padding: 0 0.35rem; margin: 0 0.1rem; color: var(--muted); border-radius: 2px; white-space: nowrap; }
+.btn.big { min-height: 4.4rem; font-size: 1.6rem; letter-spacing: 0.08em; }
+
+.g3 { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 30rem; gap: 1.6rem; }
+.g3-left { display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.g3-info { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.g3-info .right { text-align: right; }
+.g3-dice { display: flex; gap: 1.6rem; justify-content: center; margin-top: 0.4rem; }
+.die-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+.die { width: 7.6rem; height: 7.6rem; border: 1px solid var(--line); background: var(--panel); border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+.die span { font-family: var(--mono); font-size: 2.8rem; color: var(--dim); }
+.die.up { background: var(--text); border-color: var(--text); }
+.pips { display: grid; grid-template-columns: repeat(3, 1.4rem); grid-template-rows: repeat(3, 1.4rem); gap: 0.5rem; }
+.pips i { display: block; border-radius: 50%; }
+.pips i.on { background: var(--bg); }
+.die-cap { font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); height: 1rem; }
+.g3-ev { text-align: center; font-size: 1.2rem; color: var(--muted); }
+.g3-ev b { color: var(--text); }
+.g3-quotebox { display: grid; grid-template-columns: 1fr 1fr 0.7fr; border: 1px solid var(--line); }
+.g3-q { display: flex; flex-direction: column; align-items: center; padding: 0.7rem 0 0.5rem; border-right: 1px solid var(--line); }
+.g3-q:last-child { border-right: 0; }
+.g3-px { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 3.4rem; line-height: 1.1; }
+.g3-q.small .g3-px { font-size: 2.2rem; line-height: 1.7; color: var(--muted); }
+.g3.quoting .g3-quotebox { border-color: var(--amber); }
+.g3-controls { display: grid; grid-template-columns: repeat(4, 1fr) 1.6fr; gap: 0.8rem; }
+.g3-controls .btn { min-height: 3.8rem; }
+.g3-right { display: flex; flex-direction: column; padding: 1rem 1.2rem; min-height: 0; }
+.g3-log { flex: 1; margin-top: 0.6rem; overflow: hidden; font-family: var(--mono); font-size: 1.1rem; }
+.g3-log .ln { padding: 0.45rem 0; border-bottom: 1px solid var(--line-soft); display: flex; gap: 0.8rem; align-items: baseline; }
+.g3-log .ln .q { color: var(--dim); font-size: 0.85rem; width: 1.6rem; flex: none; }
+.g3-log .ln .r { margin-left: auto; }
+.g3-log .ln.settle { font-family: var(--sans); color: var(--text); }
+.g3-log .ln.sum { font-family: var(--sans); font-weight: 600; border-bottom: 0; border-top: 1px solid var(--line); margin-top: 0.4rem; }
+.g3-log .ln.sum .r { font-family: var(--mono); font-size: 1.4rem; }
+.g3-foot { border-top: 1px solid var(--line-soft); padding-top: 0.6rem; font-size: 1.1rem; min-height: 2rem; }
+.g3-lesson { margin-top: 1.6rem; font-size: 1.25rem; max-width: 46rem; }
+.g3-lesson p { margin: 0.6rem 0 0; }
+.g3-who { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; font-size: 1.05rem; color: var(--muted); border-top: 1px solid var(--line-soft); padding-top: 0.8rem; }
+.g3-who .label { display: block; margin-bottom: 0.2rem; color: var(--text); }
+.g3-who i { font-style: normal; color: var(--text); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.85em; }
+
+/* Phone layer (docs/ build only). Loaded after base.css and each game's game.css.
+   The laptop build scales rem with the viewport; phones use a fixed, readable rem instead. */
+html { font-size: clamp(14px, 4.1vw, 17px); }
+html, body { overscroll-behavior: none; }
+body.m { font-size: 1rem; -webkit-tap-highlight-color: transparent; }
+.m .key, .m .g2-key, .m .g4-keys { display: none; }
+.m .btn { min-height: 3rem; touch-action: manipulation; font-size: 1rem; padding: 0 0.9rem; }
+.m .btn.big { min-height: 3.6rem; font-size: 1.15rem; }
+.m a.btn { text-decoration: none; color: var(--text); }
+.m a.btn.primary { color: var(--amber); }
+
+/* Top bar: mark, game name, back link */
+.m .topbar { height: 3.2rem; padding: 0 0.9rem; gap: 0.7rem; }
+.m .topbar .brand .logo-crop { width: 2rem; height: 2rem; }
+.m .m-title { color: var(--text); letter-spacing: 0.14em; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m .m-back { margin-left: auto; color: var(--text); font-size: 0.9rem; text-decoration: none; border: 1px solid var(--line); border-radius: 2px; padding: 0 0.8rem; min-height: 2.75rem; display: inline-flex; align-items: center; white-space: nowrap; touch-action: manipulation; }
+
+/* Screens: the game screen never scrolls; how-to and results scroll naturally if needed */
+.m .screen { padding: 0.8rem 0.9rem; }
+.m .screen.howto, .m .screen.results { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.m .screen.game { overflow: hidden; touch-action: manipulation; }
+.m .countdown span { font-size: 6rem; padding: 0 2rem; }
+
+/* How to play */
+.m .howto { justify-content: flex-start; align-items: stretch; }
+.m .howto .box { width: 100%; padding: 0.4rem 0 1rem; }
+.m .howto h2 { font-size: 1.9rem; margin: 0.3rem 0 1rem; }
+.m .howto li { font-size: 1.1rem; padding-left: 2.1rem; margin-bottom: 0.8rem; }
+.m .howto li::before { font-size: 0.85rem; width: 1.5rem; }
+.m .howto .example { font-size: 1rem; margin-bottom: 1.3rem; }
+.m .m-start { width: 100%; }
+
+/* Results: stacked, current result first */
+.m .results { display: flex; flex-direction: column; gap: 0.9rem; }
+.m .m-card { border: 1px solid var(--line); background: var(--panel); padding: 0.9rem 1rem; border-radius: 2px; }
+.m .m-game { color: var(--text); margin-bottom: 0.6rem; }
+.m .results .score-big { font-size: 3rem; margin-top: 0.2rem; }
+.m .m-sub { margin-top: 0.3rem; font-size: 1rem; }
+.m .m-finished { margin-top: 0.6rem; font-size: 1.1rem; color: var(--text); border-top: 1px solid var(--line-soft); padding-top: 0.6rem; }
+.m .m-prize { border: 1px solid var(--amber); color: var(--text); padding: 0.8rem 1rem; font-size: 1.05rem; border-radius: 2px; }
+.m .m-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.m .takeaway { font-size: 1.05rem; }
+.m .m-join { width: 100%; color: var(--text); }
+.m .results .detail { display: block; padding-top: 0.4rem; border-top: 1px solid var(--line); }
+.m .results .detail .chartbox { height: 15rem; flex: none !important; }
+.m table.data { font-size: 0.9rem; }
+.m table.data th { font-size: 0.65rem; letter-spacing: 0.12em; padding: 0.4rem 0.35rem; }
+.m table.data td { padding: 0.35rem; white-space: normal; }
+.m table.data td.num { white-space: nowrap; }
+
+/* Shared in-game bits */
+.m .kv .v { font-size: 1.5rem; }
+.m .label { font-size: 0.7rem; letter-spacing: 0.16em; }
+
+/* Phone held sideways: short screens get the laptop-style side-by-side layouts, compacted.
+   The game screen may scroll as a last resort so no control is ever unreachable. */
+@media (orientation: landscape) and (max-height: 520px) {
+  html { font-size: clamp(12px, 3.4vh, 15px); }
+  .m .topbar { height: 2.8rem; }
+  .m .m-back { min-height: 2.4rem; }
+  .m .screen { padding: 0.5rem 0.9rem; }
+  .m .screen.game { overflow-y: auto; }
+}
+
+/* Phone layout: one column; dice, quote, buttons, then the trade log. */
+.m .g3 { display: flex; flex-direction: column; gap: 0.6rem; }
+.m .g3-left { gap: 0.6rem; flex: none; }
+.m .g3-info .v { font-size: 1.4rem; }
+.m .g3-dice { gap: 0.9rem; margin-top: 0; }
+.m .die { width: 4.4rem; height: 4.4rem; }
+.m .die span { font-size: 1.8rem; }
+.m .pips { grid-template-columns: repeat(3, 0.8rem); grid-template-rows: repeat(3, 0.8rem); gap: 0.3rem; }
+.m .die-cap { font-size: 0.6rem; letter-spacing: 0.12em; height: 0.8rem; }
+.m .g3-ev { font-size: 0.9rem; }
+.m .g3-q { padding: 0.45rem 0 0.3rem; }
+.m .g3-px { font-size: 2.3rem; }
+.m .g3-q.small .g3-px { font-size: 1.5rem; line-height: 1.55; }
+.m .g3-q .label { font-size: 0.6rem; letter-spacing: 0.1em; }
+.m .g3-controls { grid-template-columns: repeat(4, 1fr); gap: 0.45rem; }
+.m .g3-controls .btn { min-height: 3.2rem; padding: 0; font-size: 0.95rem; }
+.m .g3-controls #g3-submit { grid-column: 1 / -1; min-height: 3.4rem; font-size: 1.1rem; }
+.m .g3-who { display: none; }
+.m .g3-right { flex: 1; min-height: 0; padding: 0.6rem 0.8rem; }
+.m .g3-log { font-size: 0.85rem; margin-top: 0.3rem; }
+.m .g3-log .ln { padding: 0.3rem 0; gap: 0.5rem; }
+.m .g3-log .ln .q { font-size: 0.7rem; width: 1.3rem; }
+.m .g3-log .ln.sum .r { font-size: 1.1rem; }
+.m .g3-foot { font-size: 0.9rem; padding-top: 0.4rem; min-height: 1.6rem; }
+.m .g3-lesson { font-size: 1rem; margin-top: 1rem; }
+.m .results .detail table.data th:nth-child(4), .m .results .detail table.data td:nth-child(4) { display: none; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .m .g3 { display: grid; grid-template-columns: 1fr 17rem; gap: 0.9rem; }
+  .m .g3-left { gap: 0.4rem; }
+  .m .g3-info .v { font-size: 1.1rem; }
+  .m .die { width: 3rem; height: 3rem; }
+  .m .die-wrap { width: 5.5rem; }
+  .m .pips { grid-template-columns: repeat(3, 0.55rem); grid-template-rows: repeat(3, 0.55rem); gap: 0.2rem; }
+  .m .g3-px { font-size: 1.7rem; }
+  .m .g3-q.small .g3-px { font-size: 1.2rem; line-height: 1.4; }
+  .m .g3-controls { grid-template-columns: repeat(4, 1fr) 1.5fr; }
+  .m .g3-controls #g3-submit { grid-column: auto; min-height: 3.2rem; }
+  .m .g3-controls .btn { min-height: max(3.2rem, 44px); }
+  .m .g3-right { min-height: 0; overflow: hidden; }
+}
+
+</style>
+</head>
+<body data-screen="attract">
+<div id="app"></div>
+<script>
+window.ASSETS = {"logo":"data:image/webp;base64,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"};
+window.AS_TARGET = 'mobile';
+window.AS_LINKS = {"join":"https://linktr.ee/uom_algosoc"};
+
+/* ---- shared/rng.js ---- */
+/* Seedable PRNG (mulberry32) with Gaussian draws. Works in the browser and in Node. */
+(function (root) {
+  'use strict';
+  function makeRng(seed) {
+    let s = seed >>> 0;
+    let spare = null;
+    function next() {
+      s = (s + 0x6d2b79f5) >>> 0;
+      let t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    function normal() {
+      if (spare !== null) { const v = spare; spare = null; return v; }
+      let u, v, r;
+      do { u = next() * 2 - 1; v = next() * 2 - 1; r = u * u + v * v; } while (r >= 1 || r === 0);
+      const m = Math.sqrt(-2 * Math.log(r) / r);
+      spare = v * m;
+      return u * m;
+    }
+    return {
+      seed: seed >>> 0,
+      next,
+      normal,
+      uniform: (a, b) => a + (b - a) * next(),
+      int: (a, b) => a + Math.floor(next() * (b - a + 1)),
+      sign: () => (next() < 0.5 ? -1 : 1),
+      pick: (arr) => arr[Math.floor(next() * arr.length)],
+      shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(next() * (i + 1));
+          const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+        }
+        return arr;
+      },
+    };
+  }
+  function newSeed() {
+    return ((Date.now() % 1e9) ^ Math.floor(Math.random() * 4294967296)) >>> 0;
+  }
+  const api = { makeRng, newSeed };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.ASRng = api;
+})(this);
+
+/* ---- shared/chart.js ---- */
+/* Canvas chart helpers: devicePixelRatio-aware setup, scales, hairline grid,
+   series and trade markers. No dependencies. */
+(function (root) {
+  'use strict';
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const C = {};
+  function loadColors() {
+    ['bg', 'panel', 'panel-2', 'line', 'line-soft', 'text', 'muted', 'dim', 'green', 'red', 'amber'].forEach((k) => { C[k.replace('-', '')] = css('--' + k); });
+    C.mono = css('--mono');
+    C.sans = css('--sans');
+  }
+
+  /* Size the backing store to the element's CSS size times devicePixelRatio. */
+  function fit(canvas) {
+    if (!C.text) loadColors();
+    const dpr = window.devicePixelRatio || 1;
+    const r = canvas.getBoundingClientRect();
+    const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, r.width, r.height);
+    return { ctx, w: r.width, h: r.height, dpr, rem: parseFloat(getComputedStyle(document.documentElement).fontSize) };
+  }
+
+  function scale(d0, d1, r0, r1) {
+    const k = d1 === d0 ? 0 : (r1 - r0) / (d1 - d0);
+    return (v) => r0 + (v - d0) * k;
+  }
+
+  function extent(arrs, from, to) {
+    let lo = Infinity, hi = -Infinity;
+    for (const a of arrs) {
+      const f = from == null ? 0 : from, t = to == null ? a.length : Math.min(to, a.length);
+      for (let i = Math.max(0, f); i < t; i++) { const v = a[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    }
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    if (hi - lo < 1e-9) { lo -= 0.5; hi += 0.5; }
+    return [lo, hi];
+  }
+
+  function pad(r, frac) { const d = (r[1] - r[0]) * frac; return [r[0] - d, r[1] + d]; }
+
+  function niceTicks(lo, hi, n) {
+    const span = hi - lo, raw = span / Math.max(1, n);
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) || 10 * mag;
+    const out = [];
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10));
+    return { ticks: out, step };
+  }
+
+  /* Snap a coordinate to the centre of a device pixel so 1px lines stay sharp. */
+  function snap(v, dpr) { return (Math.floor(v * dpr) + 0.5) / dpr; }
+
+  function hline(g, x0, x1, y, color, dash) {
+    const { ctx, dpr } = g;
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = 1 / dpr * Math.max(1, Math.round(dpr));
+    if (dash) ctx.setLineDash(dash);
+    const yy = snap(y, dpr);
+    ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x1, yy); ctx.stroke();
+    ctx.restore();
+  }
+  function vline(g, x, y0, y1, color, dash) {
+    const { ctx, dpr } = g;
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = 1 / dpr * Math.max(1, Math.round(dpr));
+    if (dash) ctx.setLineDash(dash);
+    const xx = snap(x, dpr);
+    ctx.beginPath(); ctx.moveTo(xx, y0); ctx.lineTo(xx, y1); ctx.stroke();
+    ctx.restore();
+  }
+
+  /* Horizontal grid with right-aligned monospace labels in the gutter [x1, x1+gutter]. */
+  function grid(g, box, ys, lo, hi, opts) {
+    opts = opts || {};
+    const { ctx, rem } = g;
+    const t = niceTicks(lo, hi, opts.count || 5);
+    const dec = opts.decimals != null ? opts.decimals : Math.max(0, -Math.floor(Math.log10(t.step) + 1e-9));
+    ctx.font = `${(opts.fontRem || 0.8) * rem}px ${C.mono}`;
+    ctx.fillStyle = C.muted; ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
+    for (const v of t.ticks) {
+      const y = ys(v);
+      if (y < box.y0 - 1 || y > box.y1 + 1) continue;
+      hline(g, box.x0, box.x1, y, C.linesoft);
+      if (opts.labels !== false) ctx.fillText((opts.fmt ? opts.fmt(v) : v.toFixed(dec)), box.x1 + (opts.gutter || 4 * rem), y);
+    }
+  }
+
+  /* Draw a polyline for indices [from, to) of arr. */
+  function series(g, arr, from, to, xs, ys, color, width, dash) {
+    const { ctx } = g;
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = width || 1.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    let started = false;
+    for (let i = from; i < to; i++) {
+      const v = arr[i];
+      if (!isFinite(v)) { started = false; continue; }
+      const x = xs(i), y = ys(v);
+      if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* Trade marker: triangle pointing up (buy) or down (sell), filled or outlined. */
+  function tri(g, x, y, up, color, filled, size) {
+    const { ctx } = g;
+    const s = size || 0.55 * g.rem;
+    const off = s * 1.1;
+    const cy = up ? y + off + s * 0.5 : y - off - s * 0.5;
+    ctx.save();
+    ctx.beginPath();
+    if (up) { ctx.moveTo(x, cy - s * 0.7); ctx.lineTo(x + s * 0.75, cy + s * 0.55); ctx.lineTo(x - s * 0.75, cy + s * 0.55); }
+    else { ctx.moveTo(x, cy + s * 0.7); ctx.lineTo(x + s * 0.75, cy - s * 0.55); ctx.lineTo(x - s * 0.75, cy - s * 0.55); }
+    ctx.closePath();
+    if (filled) { ctx.fillStyle = color; ctx.fill(); }
+    else { ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.fillStyle = C.bg; ctx.fill(); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function text(g, s, x, y, opts) {
+    opts = opts || {};
+    const { ctx, rem } = g;
+    ctx.save();
+    ctx.font = `${opts.weight || ''} ${(opts.size || 0.8) * rem}px ${opts.sans ? C.sans : C.mono}`;
+    ctx.fillStyle = opts.color || C.muted;
+    ctx.textAlign = opts.align || 'left';
+    ctx.textBaseline = opts.baseline || 'alphabetic';
+    if (opts.spacing && 'letterSpacing' in ctx) ctx.letterSpacing = opts.spacing;
+    ctx.fillText(s, x, y);
+    ctx.restore();
+  }
+
+  /* Price tag on the right axis. */
+  function tag(g, s, x, y, color, bg) {
+    const { ctx, rem } = g;
+    ctx.save();
+    ctx.font = `${0.85 * rem}px ${C.mono}`;
+    const w = ctx.measureText(s).width + 0.8 * rem, h = 1.3 * rem;
+    ctx.fillStyle = bg || C.text;
+    ctx.fillRect(x, y - h / 2, w, h);
+    ctx.fillStyle = color || C.bg; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.fillText(s, x + 0.4 * rem, y + 0.5);
+    ctx.restore();
+  }
+
+  /* requestAnimationFrame loop; returns a stop function. */
+  function loop(fn) {
+    let id = 0, alive = true, t0 = performance.now();
+    function f(t) { if (!alive) return; fn(t - t0, t); if (alive) id = requestAnimationFrame(f); }
+    id = requestAnimationFrame(f);
+    return () => { alive = false; cancelAnimationFrame(id); };
+  }
+
+  root.ASChart = { C, loadColors, fit, scale, extent, pad, niceTicks, hline, vline, grid, series, tri, text, tag, loop };
+})(this);
+
+/* ---- shared/core.js ---- */
+/* Shared runtime for the fair games: screen flow, leaderboard, idle timer,
+   nickname entry, admin shortcuts, results panel. Depends on ASRng and ASChart. */
+(function (root) {
+  'use strict';
+
+  /* ---------- config, formatting ---------- */
+  function config(defaults) {
+    // Test hook: window.__AS_OVERRIDES is merged over a game's CONFIG.
+    return Object.assign({}, defaults, root.__AS_OVERRIDES || {});
+  }
+  const MINUS = '−';
+  const fmt = {
+    signed(v, dp) { dp = dp == null ? 2 : dp; const s = Math.abs(v).toFixed(dp); return (v > 0.0000001 && +s !== 0 ? '+' : v < -0.0000001 && +s !== 0 ? MINUS : '') + s; },
+    money(v, dp) { dp = dp == null ? 2 : dp; const s = Math.abs(v).toFixed(dp); const z = +s === 0; return (z ? '' : v > 0 ? '+' : MINUS) + '£' + s; },
+    pct(v, dp) { return fmt.signed(v, dp == null ? 1 : dp) + '%'; },
+    cls(v) { return v > 0.0000001 ? 'pos' : v < -0.0000001 ? 'neg' : ''; },
+  };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------- storage with in-memory fallback ---------- */
+  const mem = {};
+  const store = {
+    get(k) {
+      if (Object.prototype.hasOwnProperty.call(mem, k)) return mem[k];
+      try { return root.localStorage.getItem(k); } catch (e) { return null; }
+    },
+    set(k, v) { mem[k] = v; try { root.localStorage.setItem(k, v); } catch (e) { /* memory only */ } },
+  };
+
+  /* ---------- leaderboard ---------- */
+  function Leaderboard(key, maxEntries) {
+    let entries = [];
+    try {
+      const raw = JSON.parse(store.get(key) || '[]');
+      if (Array.isArray(raw)) entries = raw.filter((e) => e && typeof e.score === 'number' && isFinite(e.score) && typeof e.name === 'string');
+    } catch (e) { entries = []; }
+    const cmp = (a, b) => b.score - a.score || a.t - b.t;
+    const save = () => { entries.sort(cmp); if (entries.length > maxEntries) entries.length = maxEntries; store.set(key, JSON.stringify(entries)); };
+    return {
+      key,
+      add(e) { e.id = e.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)); e.t = e.t || Date.now(); entries.push(e); save(); return e.id; },
+      rename(id, name) { const e = entries.find((x) => x.id === id); if (e) { e.name = name; save(); } },
+      rankOf(id) { entries.sort(cmp); const i = entries.findIndex((x) => x.id === id); return i < 0 ? null : i + 1; },
+      top(n) { entries.sort(cmp); return entries.slice(0, n); },
+      count() { return entries.length; },
+      all() { entries.sort(cmp); return entries.slice(); },
+      clear() { entries = []; save(); },
+    };
+  }
+
+  /* ---------- nickname ---------- */
+  const NAME_MAX = 12;
+  const cleanName = (s) => String(s || '').replace(/[^A-Za-z0-9 ]/g, '').replace(/\s+/g, ' ').slice(0, NAME_MAX);
+  // Basic filter. Substring list catches compounds; word list avoids blocking innocent words.
+  const BAD_SUB = ['fuck', 'fuk', 'fck', 'cunt', 'nigg', 'nigga', 'shit', 'wank', 'twat', 'bitch', 'whore', 'slut', 'retard', 'spastic', 'bellend', 'tosser', 'dildo', 'jizz', 'porn', 'penis', 'vagina', 'hitler', 'nazi', 'faggot', 'pussy', 'asshole', 'arsehole', 'bollock', 'nonce', 'kkk', 'cock', 'wanker', 'motherf', 'paedo', 'pedo', 'rapist'];
+  const BAD_WORD = ['cum', 'sex', 'fag', 'fags', 'arse', 'ass', 'dick', 'dicks', 'tits', 'boob', 'boobs', 'piss', 'prick', 'knob', 'coon', 'paki', 'spic', 'wog', 'kike', 'chink', 'rape', 'dyke', 'tranny', 'homo', 'nob', 'git', 'slag', 'minge', 'poof'];
+  function isProfane(name) {
+    const lower = name.toLowerCase().replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/5/g, 's').replace(/7/g, 't').replace(/8/g, 'b');
+    const words = lower.split(' ').filter(Boolean);
+    const joined = words.join('');
+    const collapsed = joined.replace(/(.)\1+/g, '$1');
+    if (BAD_SUB.some((b) => joined.includes(b) || collapsed.includes(b))) return true;
+    const cands = new Set(words.concat([joined], words.map((w) => w.replace(/(.)\1+/g, '$1'))));
+    return BAD_WORD.some((b) => cands.has(b));
+  }
+
+  /* ---------- app shell ---------- */
+  /* spec: { id, number, total, title, pitch, howto: [3 lines], example: html,
+             columns: [{key,label,fmt}], scoreLabel, countdown, game, gameHtml? }
+     game: { mount(el, app), start(ctx), stop(), onKey(e) -> bool,
+             renderResults(el, result), stopResults() } */
+  function createApp(spec) {
+    // The phone build (docs/) bundles mobile.js and sets AS_TARGET; the laptop path below is unchanged.
+    if (root.AS_TARGET === 'mobile') return root.AS.createMobileApp(spec);
+    const CFG = spec.config;
+    const A = root.ASSETS || {};
+    const lb = Leaderboard('uom-algosoc.fair.' + spec.id + '.leaderboard.v1', CFG.LEADERBOARD_MAX || 1000);
+    const $ = (sel, el) => (el || document).querySelector(sel);
+    const OTHERS = [['1', 'Beat the Market'], ['2', 'Real or Random'], ['3', 'Make a Market'], ['4', 'Tune the Strategy']];
+
+    const app = { spec, config: CFG, lb, state: 'attract', lastId: null, seed: 0 };
+    root.ASApp = app;
+
+    // --- DOM ---
+    const others = OTHERS.filter((o) => o[0] !== String(spec.number)).map((o) => `<b>${esc(o[1])}</b>`).join(' · ');
+    document.getElementById('app').innerHTML = `
+      <header class="topbar">
+        <div class="brand"><div class="logo-crop logo-mark"><img alt="" src="${A.logo || ''}"></div><span class="label">UoM Algorithmic Trading Society</span></div>
+        <span class="sep"></span>
+        <span class="label" style="color:var(--text)">${esc(spec.title)}</span>
+        <div class="status" id="status"></div>
+      </header>
+      <main class="screens">
+        <section class="screen attract" id="scr-attract">
+          <div class="left">
+            <div class="logo-crop"><img alt="UoM Algorithmic Trading Society" src="${A.logo || ''}"></div>
+            <div class="label">Game ${spec.number}/${spec.total || 4}</div>
+            <h1>${esc(spec.title)}</h1>
+            <p class="pitch">${esc(spec.pitch)}</p>
+            <button class="btn primary cta" id="btn-play">Click or press Space to play</button>
+            <div class="others">Also on this stall: ${others}</div>
+          </div>
+          <div class="right">
+            <div class="lb-title"><span class="label">This laptop · top 10</span><span class="label" id="lb-count"></span></div>
+            <table class="data" id="lb-table"></table>
+          </div>
+          <div class="ticker"><canvas id="ticker"></canvas></div>
+        </section>
+        <section class="screen howto" id="scr-howto">
+          <div class="box panel">
+            <div class="label">How to play</div>
+            <h2>${esc(spec.title)}</h2>
+            <ol>${spec.howto.map((l) => `<li>${l}</li>`).join('')}</ol>
+            <div class="example"><span class="label">Example</span>${spec.example}</div>
+            <button class="btn primary cta" id="btn-start">Click or press Space to start</button>
+          </div>
+        </section>
+        <section class="screen game" id="scr-game"></section>
+        <section class="screen results" id="scr-results">
+          <div class="detail" id="res-detail"></div>
+          <div class="side">
+            <div>
+              <div class="label">${esc(spec.scoreLabel || 'Your score')}</div>
+              <div class="score-big" id="res-score"></div>
+              <div class="muted mono" id="res-sub" style="margin-top:0.4rem;font-size:1.1rem"></div>
+            </div>
+            <div class="rank-line" id="res-rank"></div>
+            <div>
+              <div class="nick" id="nick-row">
+                <input id="nick" maxlength="${NAME_MAX}" placeholder="nickname" autocomplete="off" spellcheck="false" aria-label="Nickname">
+                <button class="btn primary" id="btn-save">Save <span class="key">Enter</span></button>
+              </div>
+              <div class="nick" id="next-row" hidden><button class="btn primary" id="btn-next" style="flex:1">Next player <span class="key">Space</span></button></div>
+              <div class="nick-msg" id="nick-msg">Letters and numbers, max ${NAME_MAX}. Blank saves as anon.</div>
+            </div>
+            <div class="takeaway" id="res-takeaway"></div>
+            <div class="qr">
+              <img alt="QR code" src="${A.qr || ''}">
+              <div class="cap"><span class="label">Join UoM AlgoSoc</span>Scan to join: WhatsApp, Instagram and free membership</div>
+            </div>
+            <div class="seed" id="res-seed"></div>
+          </div>
+        </section>
+      </main>`;
+    const screens = { attract: $('#scr-attract'), howto: $('#scr-howto'), game: $('#scr-game'), results: $('#scr-results') };
+    const statusEl = $('#status');
+    app.statusEl = statusEl;
+    if (spec.gameHtml) screens.game.innerHTML = spec.gameHtml;
+    spec.game.mount(screens.game, app);
+
+    // --- screen switching ---
+    let lastSwitch = 0;
+    function show(name) {
+      app.state = name;
+      lastSwitch = performance.now();
+      document.body.dataset.screen = name;
+      for (const k in screens) screens[k].classList.toggle('active', k === name);
+      if (name !== 'game') statusEl.innerHTML = '';
+    }
+
+    // --- attract ---
+    function renderBoard() {
+      const rows = lb.top(10);
+      const cols = spec.columns;
+      let h = `<thead><tr><th class="num">#</th><th>Nickname</th>${cols.map((c) => `<th class="num">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>`;
+      for (let i = 0; i < 10; i++) {
+        const e = rows[i];
+        if (!e) { h += `<tr class="empty"><td class="num rank">${i + 1}</td><td class="name">—</td>${cols.map(() => '<td class="num">—</td>').join('')}</tr>`; continue; }
+        h += `<tr class="${e.id === app.lastId ? 'me' : ''}"><td class="num rank">${i + 1}</td><td class="name">${esc(e.name)}</td>${cols.map((c) => { const v = e[c.key]; const f = c.fmt ? c.fmt(v, e) : esc(v); const cl = c.color ? fmt.cls(v) : ''; return `<td class="num ${cl}">${f}</td>`; }).join('')}</tr>`;
+      }
+      $('#lb-table').innerHTML = h + '</tbody>';
+      $('#lb-count').textContent = lb.count() ? lb.count() + (lb.count() === 1 ? ' player' : ' players') : '';
+    }
+    let stopTicker = null;
+    function startTicker() {
+      const Ch = root.ASChart;
+      const rng = root.ASRng.makeRng(root.ASRng.newSeed());
+      const N = 240, pts = [];
+      let v = 0, d = 0;
+      const step = () => { d = 0.97 * d + 0.03 * rng.normal(); v += 0.35 * rng.normal() + 0.8 * d; pts.push(v); if (pts.length > N + 2) pts.shift(); };
+      for (let i = 0; i < N + 2; i++) step();
+      let acc = 0, last = 0;
+      const cv = $('#ticker');
+      stopTicker = Ch.loop((t) => {
+        acc += t - last; last = t;
+        while (acc > 250) { step(); acc -= 250; }
+        const g = Ch.fit(cv);
+        const frac = acc / 250;
+        const [lo, hi] = Ch.pad(Ch.extent([pts]), 0.15);
+        const xs = (i) => g.w * ((i - frac) / (N - 1));
+        const ys = Ch.scale(lo, hi, g.h - 6, 6);
+        Ch.series(g, pts, 0, pts.length, xs, ys, Ch.C.dim, 1.5);
+      });
+    }
+    function goAttract() {
+      if (app.state === 'game') spec.game.stop();
+      if (app.state === 'results' && spec.game.stopResults) spec.game.stopResults();
+      if (app.state === 'results' && !saved) saveName('anon');
+      clearCountdown();
+      renderBoard();
+      show('attract');
+      if (!stopTicker) startTicker();
+      $('#btn-play').focus({ preventScroll: true });
+    }
+    app.goAttract = goAttract;
+
+    function goHowto() {
+      if (stopTicker) { stopTicker(); stopTicker = null; }
+      show('howto');
+      $('#btn-start').focus({ preventScroll: true });
+    }
+
+    // --- game ---
+    let cdTimer = 0, cdEl = null;
+    function clearCountdown() { clearInterval(cdTimer); cdTimer = 0; if (cdEl) { cdEl.remove(); cdEl = null; } }
+    function startGame() {
+      show('game');
+      const urlSeed = new URLSearchParams(root.location.search).get('seed');
+      app.seed = urlSeed != null && /^\d+$/.test(urlSeed) ? (+urlSeed >>> 0) : root.ASRng.newSeed();
+      const ctx = { seed: app.seed, rng: root.ASRng.makeRng(app.seed), config: CFG, finish, status: (html) => { statusEl.innerHTML = html; } };
+      if (spec.game.prepare) spec.game.prepare(ctx);
+      const n = spec.countdown || 0;
+      if (!n) { spec.game.start(ctx); return; }
+      let k = n;
+      cdEl = document.createElement('div');
+      cdEl.className = 'countdown';
+      cdEl.innerHTML = `<span>${k}</span>`;
+      screens.game.appendChild(cdEl);
+      cdTimer = setInterval(() => {
+        k--;
+        if (k <= 0) { clearCountdown(); if (app.state === 'game') spec.game.start(ctx); }
+        else cdEl.firstChild.textContent = k;
+      }, CFG.COUNTDOWN_STEP_MS || 700);
+    }
+
+    // --- results ---
+    let saved = true, curId = null;
+    function finish(result) {
+      if (app.state !== 'game') return;
+      const entry = Object.assign({ name: 'anon', score: result.score, seed: app.seed }, result.entry || {});
+      curId = lb.add(entry);
+      app.lastId = curId;
+      saved = false;
+      const rank = lb.rankOf(curId);
+      $('#res-score').innerHTML = `<span class="${result.scoreClass != null ? result.scoreClass : fmt.cls(result.score)}">${esc(result.scoreText)}</span>`;
+      $('#res-sub').innerHTML = result.subHtml || '';
+      const rl = $('#res-rank');
+      const beaten = lb.count() > 1;
+      if (rank === 1 && beaten) { rl.textContent = 'New high score!'; rl.className = 'rank-line hi'; }
+      else if (rank <= 10) { rl.textContent = `Rank ${rank} of ${lb.count()}. You made the top 10.`; rl.className = 'rank-line hi'; }
+      else { rl.textContent = `Rank ${rank} of ${lb.count()}.`; rl.className = 'rank-line'; }
+      $('#res-takeaway').textContent = result.takeaway;
+      $('#res-seed').textContent = 'seed ' + app.seed;
+      $('#nick').value = '';
+      $('#nick-row').hidden = false; $('#next-row').hidden = true;
+      $('#nick-msg').textContent = `Letters and numbers, max ${NAME_MAX}. Blank saves as anon.`;
+      $('#nick-msg').className = 'nick-msg';
+      show('results');
+      spec.game.renderResults($('#res-detail'), result);
+      setTimeout(() => { if (app.state === 'results' && !saved) $('#nick').focus({ preventScroll: true }); }, 0);
+    }
+    function saveName(name) {
+      if (saved) return true;
+      name = cleanName(name).trim();
+      if (!name) name = 'anon';
+      if (isProfane(name)) {
+        $('#nick-msg').textContent = 'Pick another name.';
+        $('#nick-msg').className = 'nick-msg neg';
+        return false;
+      }
+      lb.rename(curId, name);
+      saved = true;
+      $('#nick-row').hidden = true; $('#next-row').hidden = false;
+      $('#nick-msg').textContent = `Saved as ${name}.`;
+      $('#nick-msg').className = 'nick-msg';
+      $('#btn-next').focus({ preventScroll: true });
+      return true;
+    }
+    app.saveName = saveName;
+
+    const nick = $('#nick');
+    nick.addEventListener('input', () => {
+      const c = cleanName(nick.value);
+      if (c !== nick.value) nick.value = c;
+    });
+    $('#btn-save').addEventListener('click', () => saveName(nick.value));
+    $('#btn-next').addEventListener('click', goAttract);
+    $('#btn-play').addEventListener('click', (e) => { e.stopPropagation(); if (app.state === 'attract') goHowto(); });
+    $('#btn-start').addEventListener('click', (e) => { e.stopPropagation(); if (app.state === 'howto') startGame(); });
+    screens.attract.addEventListener('click', () => { if (app.state === 'attract' && performance.now() - lastSwitch > 250) goHowto(); });
+    screens.howto.addEventListener('click', () => { if (app.state === 'howto' && performance.now() - lastSwitch > 250) startGame(); });
+    screens.results.addEventListener('pointerup', (e) => { if (app.state === 'results' && !saved && !e.target.closest('button')) nick.focus({ preventScroll: true }); });
+
+    // --- admin ---
+    function exportBoard() {
+      const data = JSON.stringify({ game: spec.id, title: spec.title, exported: new Date().toISOString(), entries: lb.all() }, null, 2);
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `algosoc-${spec.id}-leaderboard-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    app.exportBoard = exportBoard;
+
+    // --- input routing ---
+    let lastInput = performance.now(), lastPtr = null;
+    const touch = () => { lastInput = performance.now(); };
+    app.touch = touch;
+    root.addEventListener('keydown', (e) => {
+      const k = e.key;
+      if (e.ctrlKey && e.shiftKey && (k === 'R' || k === 'r')) {
+        e.preventDefault();
+        if (root.confirm(`Clear the ${spec.title} leaderboard? This cannot be undone.`)) { lb.clear(); app.lastId = null; renderBoard(); }
+        return;
+      }
+      if (e.ctrlKey && e.shiftKey && (k === 'E' || k === 'e')) { e.preventDefault(); exportBoard(); return; }
+      touch();
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      const go = k === ' ' || k === 'Enter';
+      if (app.state === 'attract') { if (go) { e.preventDefault(); if (!e.repeat) goHowto(); } return; }
+      if (app.state === 'howto') { if (go) { e.preventDefault(); if (!e.repeat) startGame(); } if (k === 'Escape') goAttract(); return; }
+      if (app.state === 'game') {
+        if (k === 'Escape') { goAttract(); return; }
+        if (cdEl) { if ([' ', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(k)) e.preventDefault(); return; }
+        if (spec.game.onKey(e) || [' ', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(k)) e.preventDefault();
+        return;
+      }
+      if (app.state === 'results') {
+        if (!saved) {
+          if (k === 'Enter') { e.preventDefault(); saveName(nick.value); }
+          else if (k === 'Escape') { e.preventDefault(); saveName('anon'); }
+          else if (document.activeElement !== nick && k.length === 1) nick.focus({ preventScroll: true });
+          return;
+        }
+        if ((go || k === 'Escape') && !e.repeat) { e.preventDefault(); goAttract(); }
+      }
+    }, true);
+    root.addEventListener('pointerdown', touch, true);
+    root.addEventListener('wheel', touch, { passive: true, capture: true });
+    root.addEventListener('pointermove', (e) => {
+      if (lastPtr && Math.abs(e.clientX - lastPtr[0]) + Math.abs(e.clientY - lastPtr[1]) > 6) touch();
+      lastPtr = [e.clientX, e.clientY];
+    }, true);
+    setInterval(() => {
+      if (app.state !== 'attract' && performance.now() - lastInput > (CFG.IDLE_SECONDS || 25) * 1000) goAttract();
+    }, 250);
+
+    goAttract();
+    return app;
+  }
+
+  root.AS = { config, fmt, esc, store, Leaderboard, cleanName, isProfane, createApp, mobile: root.AS_TARGET === 'mobile' };
+})(this);
+
+/* ---- shared/mobile.js ---- */
+/* Phone shell for the GitHub Pages build (docs/). Bundled only when AS_TARGET = 'mobile'.
+   Differences from the laptop shell in core.js:
+   - no attract screen, leaderboard, nickname entry or idle reset: phones are personal devices
+   - every game gets a fresh random seed; ?seed= is ignored and the seed is never shown
+   - the results screen stays up until the player acts, shows the finish time, and tells the
+     player to show it to a committee member (the paper sheet is the official leaderboard) */
+(function (root) {
+  'use strict';
+  const AS = root.AS, esc = AS.esc;
+  const LINKS = root.AS_LINKS || {};
+
+  function createMobileApp(spec) {
+    const CFG = spec.config;
+    const A = root.ASSETS || {};
+    const $ = (sel) => document.querySelector(sel);
+    const app = { spec, config: CFG, state: 'howto', seed: 0, mobile: true };
+    root.ASApp = app;
+    document.body.classList.add('m');
+
+    const howto = spec.howtoMobile || spec.howto;
+    document.getElementById('app').innerHTML = `
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="All games"><div class="logo-crop logo-mark"><img alt="" src="${A.logo || ''}"></div></a>
+        <span class="label m-title">${esc(spec.title)}</span>
+        <a class="m-back" href="index.html" id="btn-back">All games</a>
+      </header>
+      <main class="screens">
+        <section class="screen howto" id="scr-howto">
+          <div class="box">
+            <div class="label">How to play · about a minute</div>
+            <h2>${esc(spec.title)}</h2>
+            <ol>${howto.map((l) => `<li>${l}</li>`).join('')}</ol>
+            <div class="example"><span class="label">Example</span>${spec.example}</div>
+            <button class="btn primary big m-start" id="btn-start">Start</button>
+          </div>
+        </section>
+        <section class="screen game" id="scr-game"></section>
+        <section class="screen results" id="scr-results">
+          <div class="m-card">
+            <div class="label m-game">${esc(spec.title)}</div>
+            <div class="label">${esc(spec.scoreLabel || 'Your score')}</div>
+            <div class="score-big" id="res-score"></div>
+            <div class="mono muted m-sub" id="res-sub"></div>
+            <div class="m-finished mono" id="res-time"></div>
+          </div>
+          <div class="m-prize" id="res-prize">Want to enter the official prize leaderboard? Show this screen to an AlgoSoc committee member.</div>
+          <div class="m-actions">
+            <button class="btn primary big" id="btn-again">Play again</button>
+            <a class="btn big" href="index.html" id="btn-home">All games</a>
+          </div>
+          <div class="takeaway" id="res-takeaway"></div>
+          <a class="btn big m-join" id="btn-join" href="${esc(LINKS.join || '')}" target="_blank" rel="noopener noreferrer">Follow / join AlgoSoc</a>
+          <div class="detail" id="res-detail"></div>
+        </section>
+      </main>`;
+    const screens = { howto: $('#scr-howto'), game: $('#scr-game'), results: $('#scr-results') };
+    if (spec.gameHtml) screens.game.innerHTML = spec.gameHtml;
+    spec.game.mount(screens.game, app);
+
+    function show(name) {
+      app.state = name;
+      document.body.dataset.screen = name;
+      for (const k in screens) screens[k].classList.toggle('active', k === name);
+      screens[name].scrollTop = 0;
+    }
+
+    let cdTimer = 0, cdEl = null;
+    function clearCountdown() { clearInterval(cdTimer); cdTimer = 0; if (cdEl) { cdEl.remove(); cdEl = null; } }
+    function startGame() {
+      if (spec.game.stopResults) spec.game.stopResults();
+      clearCountdown();
+      show('game');
+      // Always a fresh seed: prize scores must not be replayable from the URL.
+      app.seed = root.ASRng.newSeed();
+      const ctx = { seed: app.seed, rng: root.ASRng.makeRng(app.seed), config: CFG, finish, status: () => {} };
+      if (spec.game.prepare) spec.game.prepare(ctx);
+      const n = spec.countdown || 0;
+      if (!n) { spec.game.start(ctx); return; }
+      let k = n;
+      cdEl = document.createElement('div');
+      cdEl.className = 'countdown';
+      cdEl.innerHTML = `<span>${k}</span>`;
+      screens.game.appendChild(cdEl);
+      cdTimer = setInterval(() => {
+        k--;
+        if (k <= 0) { clearCountdown(); if (app.state === 'game') spec.game.start(ctx); }
+        else cdEl.firstChild.textContent = k;
+      }, CFG.COUNTDOWN_STEP_MS || 700);
+    }
+
+    function finish(result) {
+      if (app.state !== 'game') return;
+      $('#res-score').innerHTML = `<span class="${result.scoreClass != null ? result.scoreClass : AS.fmt.cls(result.score)}">${esc(result.scoreText)}</span>`;
+      $('#res-sub').innerHTML = result.subHtml || '';
+      $('#res-time').textContent = 'Finished at ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      $('#res-takeaway').textContent = result.takeaway;
+      show('results');
+      spec.game.renderResults($('#res-detail'), result);
+    }
+
+    $('#btn-start').addEventListener('click', () => { if (app.state === 'howto') startGame(); });
+    $('#btn-again').addEventListener('click', () => { if (app.state === 'results') startGame(); });
+
+    // Keyboard stays optional: Enter/Space start, arrows etc. go to the game.
+    root.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      const k = e.key;
+      if (app.state === 'howto' && (k === ' ' || k === 'Enter') && !e.repeat && document.activeElement.tagName !== 'A') { e.preventDefault(); startGame(); return; }
+      if (app.state === 'game') {
+        if (cdEl) return;
+        if (spec.game.onKey(e) || [' ', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(k)) e.preventDefault();
+      }
+    }, true);
+
+    show('howto');
+    return app;
+  }
+
+  AS.createMobileApp = createMobileApp;
+})(this);
+
+/* ---- games/make-a-market/logic.js ---- */
+/* Game 3 rules, shared with scripts/sim_game3.js. */
+(function (root) {
+  'use strict';
+  /* Trades against one quote. The informed trader compares its fair value with
+     the quote; an uninformed customer trades with probability 1 - spread/div.
+     Each trade is from the counterparty's side: 'buy' means they bought from you. */
+  function tradesOnQuote(rng, bid, ask, fairValue, div) {
+    const out = [];
+    if (fairValue > ask) out.push({ who: 'informed', side: 'buy', price: ask });
+    else if (fairValue < bid) out.push({ who: 'informed', side: 'sell', price: bid });
+    else out.push({ who: 'informed', side: 'pass' });
+    const spread = ask - bid;
+    if (rng.next() < 1 - spread / div) {
+      const side = rng.next() < 0.5 ? 'buy' : 'sell';
+      out.push({ who: 'customer', side, price: side === 'buy' ? ask : bid });
+    } else out.push({ who: 'customer', side: 'pass' });
+    return out;
+  }
+  /* Your PnL on one trade once the asset settles at `total`. */
+  function tradePnl(t, total) {
+    if (t.side === 'buy') return t.price - total;   // you sold to them
+    if (t.side === 'sell') return total - t.price;  // you bought from them
+    return 0;
+  }
+  const api = { tradesOnQuote, tradePnl };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.G3Logic = api;
+})(this);
+
+/* ---- games/make-a-market/game.js ---- */
+/* Game 3: Make a Market. */
+(function () {
+  'use strict';
+  /*CONFIG*/
+  const CONFIG = AS.config({
+    IDLE_SECONDS: 25,
+    ROUNDS: 3,
+    QUOTE_SECONDS: 8,        // each quote auto-submits after this
+    START_MID: 10.5,
+    START_SPREAD: 2,
+    STEP: 0.5,               // Up/Down move the mid by this
+    SPREAD_STEP: 1,          // Left/Right change the spread by this (each side moves 0.5)
+    SPREAD_MIN: 1,
+    SPREAD_MAX: 6,
+    MID_MIN: 3,
+    MID_MAX: 18,
+    CUSTOMER_DIV: 7,         // customer trades with probability 1 - spread / 7
+    INFORMED_Q1_ADD: 7,      // informed fair value, quote 1: one die + 7
+    INFORMED_Q2_ADD: 3.5,    // quote 2: two dice + 3.5
+    TRADES_PAUSE_MS: 2600,   // time to read the trades before the next step
+    SETTLE_MS: 6000,         // settlement screen, or press Space
+    TEXT: {
+      title: 'Make a Market',
+      pitch: 'Quote a price. Someone who knows more than you will trade against it.',
+      howto: [
+        'Three dice are rolled face down. At the end they pay their total: 3 to 18, 10.5 on average.',
+        'Bid: the price you buy at. Ask: the price you sell at. <span class="k">↑</span><span class="k">↓</span> move both, <span class="k">←</span><span class="k">→</span> narrow or widen.',
+        'A trader who has seen one die, and a customer who has not, may trade with you.',
+      ],
+      howtoMobile: [
+        'Three dice are rolled face down. At the end they pay their total: 3 to 18, 10.5 on average.',
+        'Bid: the price you buy at. Ask: the price you sell at. Use the buttons to move and size your quote.',
+        'A trader who has seen one die, and a customer who has not, may trade with you.',
+      ],
+      example: 'You quote <b>9.5 / 11.5</b>. The trader sees a 6 and buys from you at 11.5. The dice total 14, so you lose <b class="neg">2.5</b>.',
+      takeaway: 'Tight quotes earn from customers and lose to traders who know more. That is adverse selection, and it is how market makers think.',
+    },
+  });
+  /*END CONFIG*/
+
+  const L = G3Logic, fmt = AS.fmt;
+  const WHO = { informed: 'Informed trader', customer: 'Customer' };
+  const f1 = (v) => v.toFixed(1);
+  let el, ctx, rng, round, quote, dice, mid, spread, trades, phase, t0, timer, pause, totalPnl, roundsOut;
+
+  const html = `
+    <div class="g3">
+      <div class="g3-left">
+        <div class="g3-info">
+          <div class="kv"><span class="label">Round</span><span class="v" id="g3-round">1/3</span></div>
+          <div class="kv"><span class="label">Quote</span><span class="v" id="g3-quote">1/2</span></div>
+          <div class="kv right"><span class="label">Total PnL</span><span class="v" id="g3-total">0.0</span></div>
+        </div>
+        <div class="g3-dice" id="g3-dice"></div>
+        <div class="g3-ev mono" id="g3-ev"></div>
+        <div class="g3-quotebox">
+          <div class="g3-q"><span class="label">Bid · you buy</span><span class="g3-px" id="g3-bid">9.5</span></div>
+          <div class="g3-q"><span class="label">Ask · you sell</span><span class="g3-px" id="g3-ask">11.5</span></div>
+          <div class="g3-q small"><span class="label">Spread</span><span class="g3-px" id="g3-spread">2.0</span></div>
+        </div>
+        <div class="g3-controls">
+          <button class="btn" data-a="up" tabindex="-1">Up <span class="key">↑</span></button>
+          <button class="btn" data-a="down" tabindex="-1">Down <span class="key">↓</span></button>
+          <button class="btn" data-a="narrow" tabindex="-1">Narrow <span class="key">←</span></button>
+          <button class="btn" data-a="widen" tabindex="-1">Widen <span class="key">→</span></button>
+          <button class="btn primary" data-a="submit" tabindex="-1" id="g3-submit">Submit <span class="key">Enter</span></button>
+        </div>
+        <div class="timebar"><i id="g3-bar"></i></div>
+        <div class="g3-who">
+          <div><span class="label">Informed trader</span>Has seen the dice marked <i>trader saw</i>. Trades only when your price is wrong.</div>
+          <div><span class="label">Customer</span>Knows nothing. Trades less often when your spread is wide.</div>
+        </div>
+      </div>
+      <div class="g3-right panel">
+        <div class="label">Trades this round</div>
+        <div class="g3-log" id="g3-log"></div>
+        <div class="g3-foot" id="g3-foot"></div>
+      </div>
+    </div>`;
+
+  function mount(root) {
+    el = root;
+    el.querySelectorAll('.g3-controls .btn').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); act(b.dataset.a); }));
+  }
+
+  function prepare(c) {
+    ctx = c; rng = c.rng;
+    round = 0; totalPnl = 0; roundsOut = [];
+    mid = CONFIG.START_MID; spread = CONFIG.START_SPREAD;
+    phase = 'idle';
+    newRound();
+  }
+
+  function start() { beginQuote(); }
+
+  function newRound() {
+    dice = [rng.int(1, 6), rng.int(1, 6), rng.int(1, 6)];
+    quote = 0; trades = [];
+    renderDice([false, false, false]);
+    document.getElementById('g3-log').innerHTML = '';
+    document.getElementById('g3-foot').innerHTML = '';
+    updateHud();
+  }
+
+  const bid = () => mid - spread / 2;
+  const ask = () => mid + spread / 2;
+
+  function pips(n) {
+    const on = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }[n];
+    let h = '';
+    for (let i = 0; i < 9; i++) h += `<i class="${on.includes(i) ? 'on' : ''}"></i>`;
+    return `<div class="pips">${h}</div>`;
+  }
+  // shown: which dice the player can see. Die 0 is the informed trader's; die 1 is revealed after quote 1.
+  function renderDice(shown) {
+    const seen = quote === 0 ? [true, false, false] : [true, true, false];
+    const settled = shown.every(Boolean);
+    document.getElementById('g3-dice').innerHTML = dice.map((d, i) => `
+      <div class="die-wrap">
+        <div class="die ${shown[i] ? 'up' : ''}">${shown[i] ? pips(d) : '<span>?</span>'}</div>
+        <div class="die-cap">${i === 1 && shown[1] && !settled ? 'Revealed' : seen[i] || (settled && i < 2) ? 'Trader saw' : ''}</div>
+      </div>`).join('');
+  }
+
+  function updateHud() {
+    const $ = (id) => document.getElementById(id);
+    $('g3-round').textContent = `${round + 1}/${CONFIG.ROUNDS}`;
+    $('g3-quote').textContent = `${quote + 1}/2`;
+    $('g3-bid').textContent = f1(bid());
+    $('g3-ask').textContent = f1(ask());
+    $('g3-spread').textContent = f1(spread);
+    const t = $('g3-total');
+    t.textContent = fmt.signed(totalPnl, 1);
+    t.className = 'v ' + fmt.cls(totalPnl);
+    const S = dice[0] + dice[1] + dice[2], d = dice[1];
+    $('g3-ev').innerHTML = phase === 'settle'
+      ? `All dice revealed. Total: <b>${S}</b>`
+      : AS.mobile   // shorter lines for narrow phone screens
+        ? (quote === 0 ? 'Nothing known yet. Expected total <b>10.5</b>' : `One die is ${d}. Expected total <b>${f1(d + 7)}</b>`)
+        : (quote === 0 ? 'You know nothing yet. Expected total: <b>10.5</b>' : `You know one die: ${d}. Expected total: ${d} + 7 = <b>${f1(d + 7)}</b>`);
+    el.classList.toggle('quoting', phase === 'quote');
+  }
+
+  function beginQuote() {
+    phase = 'quote';
+    t0 = performance.now();
+    clearInterval(timer);
+    timer = setInterval(() => {
+      const t = (performance.now() - t0) / 1000;
+      document.getElementById('g3-bar').style.width = Math.max(0, 100 * (1 - t / CONFIG.QUOTE_SECONDS)) + '%';
+      if (t >= CONFIG.QUOTE_SECONDS) submit();
+    }, 30);
+    updateHud();
+  }
+
+  function act(a) {
+    if (phase === 'settle' && (a === 'submit')) { nextRound(); return; }
+    if (phase !== 'quote') return;
+    const s = CONFIG.STEP;
+    if (a === 'up') mid = Math.min(CONFIG.MID_MAX, mid + s);
+    if (a === 'down') mid = Math.max(CONFIG.MID_MIN, mid - s);
+    if (a === 'narrow') spread = Math.max(CONFIG.SPREAD_MIN, spread - CONFIG.SPREAD_STEP);
+    if (a === 'widen') spread = Math.min(CONFIG.SPREAD_MAX, spread + CONFIG.SPREAD_STEP);
+    if (a === 'submit') { submit(); return; }
+    updateHud();
+  }
+
+  function logLine(t, q) {
+    if (t.side === 'pass') return `<div class="ln muted"><span class="q">Q${q}</span><span>${WHO[t.who]} passes</span></div>`;
+    const cls = t.who === 'informed' ? 'inf' : '';
+    return `<div class="ln ${cls}"><span class="q">Q${q}</span><span>${WHO[t.who]} ${t.side}s 1 at <b>${f1(t.price)}</b></span></div>`;
+  }
+
+  function submit() {
+    if (phase !== 'quote') return;
+    phase = 'show';
+    clearInterval(timer);
+    document.getElementById('g3-bar').style.width = '0%';
+    const fv = quote === 0 ? dice[0] + CONFIG.INFORMED_Q1_ADD : dice[0] + dice[1] + CONFIG.INFORMED_Q2_ADD;
+    const tr = L.tradesOnQuote(rng, bid(), ask(), fv, CONFIG.CUSTOMER_DIV);
+    tr.forEach((t) => { t.q = quote + 1; trades.push(t); });
+    document.getElementById('g3-log').insertAdjacentHTML('beforeend', tr.map((t) => logLine(t, quote + 1)).join(''));
+    updateFoot();
+    updateHud();
+    pause = setTimeout(() => {
+      if (quote === 0) {
+        quote = 1;
+        renderDice([false, true, false]);
+        beginQuote();
+      } else settle();
+    }, CONFIG.TRADES_PAUSE_MS);
+  }
+
+  function position() {
+    return trades.reduce((p, t) => p + (t.side === 'buy' ? -1 : t.side === 'sell' ? 1 : 0), 0);
+  }
+  function updateFoot() {
+    const p = position();
+    document.getElementById('g3-foot').innerHTML = `<span class="label">Your position</span> <span class="mono">${p > 0 ? 'long ' + p : p < 0 ? 'short ' + -p : 'flat'}</span>`;
+  }
+
+  function settle() {
+    phase = 'settle';
+    const S = dice[0] + dice[1] + dice[2];
+    renderDice([true, true, true]);
+    let pnl = 0, lines = '';
+    for (const t of trades) {
+      if (t.side === 'pass') continue;
+      const v = L.tradePnl(t, S);
+      pnl += v;
+      const you = t.side === 'buy' ? `you sold at ${f1(t.price)}` : `you bought at ${f1(t.price)}`;
+      lines += `<div class="ln"><span class="q">Q${t.q}</span><span>${WHO[t.who]}: ${you}</span><span class="r ${fmt.cls(v)}">${fmt.signed(v, 1)}</span></div>`;
+    }
+    if (!lines) lines = '<div class="ln muted">No trades this round.</div>';
+    totalPnl += pnl;
+    roundsOut.push({ dice: dice.slice(), total: S, pnl, trades: trades.filter((t) => t.side !== 'pass').length, informed: trades.filter((t) => t.who === 'informed' && t.side !== 'pass').length });
+    document.getElementById('g3-log').innerHTML = `
+      <div class="ln settle"><span>Dice: ${dice.join(' + ')} = <b>${S}</b>. Every trade settles at ${S}.</span></div>${lines}
+      <div class="ln sum"><span>Round PnL</span><span class="r ${fmt.cls(pnl)}">${fmt.signed(pnl, 1)}</span></div>`;
+    document.getElementById('g3-foot').innerHTML = `<span class="label">${round + 1 < CONFIG.ROUNDS ? 'Next round' : 'Results'}</span> <span class="mono muted">${AS.mobile ? 'Tap Continue' : 'Space or Enter'}</span>`;
+    document.getElementById('g3-submit').innerHTML = 'Continue <span class="key">Enter</span>';
+    updateHud();
+    pause = setTimeout(nextRound, CONFIG.SETTLE_MS);
+  }
+
+  function nextRound() {
+    if (phase !== 'settle') return;
+    clearTimeout(pause);
+    document.getElementById('g3-submit').innerHTML = 'Submit <span class="key">Enter</span>';
+    round++;
+    if (round >= CONFIG.ROUNDS) return end();
+    newRound();
+    mid = CONFIG.START_MID;
+    beginQuote();
+  }
+
+  function onKey(e) {
+    const k = e.key;
+    const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'narrow', ArrowRight: 'widen', Enter: 'submit', ' ': 'submit' };
+    if (!map[k]) return false;
+    if (e.repeat && (map[k] === 'submit')) return true;
+    act(map[k]);
+    return true;
+  }
+
+  function end() {
+    phase = 'done';
+    const score = Math.round(totalPnl * 10) / 10;
+    ctx.finish({
+      score,
+      scoreText: fmt.signed(score, 1),
+      subHtml: 'PnL over 3 rounds',
+      takeaway: CONFIG.TEXT.takeaway,
+      entry: {},
+      rounds: roundsOut.slice(),
+    });
+  }
+
+  function stop() { clearInterval(timer); clearTimeout(pause); phase = 'done'; }
+
+  function renderResults(root, r) {
+    const rows = r.rounds.map((x, i) => `<tr><td class="num rank">${i + 1}</td><td class="num">${x.dice.join(' + ')} = ${x.total}</td><td class="num">${x.trades}</td><td class="num">${x.informed}</td><td class="num ${fmt.cls(x.pnl)}">${fmt.signed(x.pnl, 1)}</td></tr>`).join('');
+    root.innerHTML = `
+      <div class="label" style="margin-bottom:0.6rem">Your rounds</div>
+      <table class="data">
+        <thead><tr><th class="num">Round</th><th class="num">Dice</th><th class="num">Trades</th><th class="num">With the informed trader</th><th class="num">PnL</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="g3-lesson">
+        <div class="label">What happened</div>
+        <p>Customers trade at random, so on average they pay you half the spread.</p>
+        <p>The informed trader only trades when your price is wrong, so every trade with it tends to lose.</p>
+        <p>A wider spread loses less to the trader but scares customers away. Market makers balance the two.</p>
+      </div>`;
+  }
+
+  AS.createApp({
+    id: 'make-a-market', number: 3, title: CONFIG.TEXT.title, pitch: CONFIG.TEXT.pitch,
+    howto: CONFIG.TEXT.howto, howtoMobile: CONFIG.TEXT.howtoMobile, example: CONFIG.TEXT.example, countdown: 0,
+    scoreLabel: 'Your PnL', config: CONFIG, gameHtml: html,
+    columns: [{ key: 'score', label: 'PnL', fmt: (v) => fmt.signed(v, 1), color: true }],
+    game: { mount, prepare, start, stop, onKey, renderResults },
+  });
+})();
+
+</script>
+</body>
+</html>

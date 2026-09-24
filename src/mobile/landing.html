@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'none'; connect-src 'none'; font-src 'none'">
+<title>Try a game · UoM AlgoSoc</title>
+<style>
+/*CSS*/
+html, body { overflow: auto; height: auto; min-height: 100%; }
+.land { max-width: 34rem; margin: 0 auto; padding: 1.2rem 1rem 2rem; }
+.land .head { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.4rem; }
+.land .head .logo-crop { width: 3.4rem; height: 3.4rem; }
+.land .head .label { color: var(--text); line-height: 1.5; }
+.land h1 { font-size: 0.85rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.7rem; font-weight: 600; }
+.land .games { display: flex; flex-direction: column; gap: 0.7rem; }
+.land .game { display: grid; grid-template-columns: 2.6rem 1fr auto; align-items: center; gap: 0.8rem; min-height: 5rem; padding: 0.8rem 1rem; background: var(--panel); border: 1px solid var(--line); border-radius: 2px; color: var(--text); text-decoration: none; touch-action: manipulation; }
+.land .game:active, .land .game:hover { border-color: var(--amber); }
+.land .game .n { font-family: var(--mono); font-size: 1.2rem; color: var(--muted); border: 1px solid var(--line); text-align: center; line-height: 2.4rem; }
+.land .game b { display: block; font-size: 1.25rem; font-weight: 600; }
+.land .game span.d { display: block; font-size: 0.95rem; color: var(--muted); margin-top: 0.15rem; }
+.land .game .go { font-family: var(--mono); color: var(--amber); font-size: 1.3rem; }
+.land .note { margin: 1rem 0 1.6rem; color: var(--muted); font-size: 1rem; }
+.land .join { width: 100%; min-height: 3.4rem; text-decoration: none; }
+.land .foot { margin-top: 1.2rem; font-size: 0.9rem; color: var(--muted); }
+</style>
+</head>
+<body class="m">
+<main class="land">
+  <div class="head">
+    <div class="logo-crop logo-mark"><img alt="" src="/*LOGO*/"></div>
+    <span class="label">UoM Algorithmic<br>Trading Society</span>
+  </div>
+  <h1>Try a game</h1>
+  <nav class="games">
+    <a class="game" href="1-beat-the-market.html"><span class="n">1</span><span><b>Beat the Market</b><span class="d">Trade a moving market.</span></span><span class="go">→</span></a>
+    <a class="game" href="2-real-or-random.html"><span class="n">2</span><span><b>Real or Random?</b><span class="d">Can you tell real prices from generated ones?</span></span><span class="go">→</span></a>
+    <a class="game" href="3-make-a-market.html"><span class="n">3</span><span><b>Make a Market</b><span class="d">Set prices and think like a market maker.</span></span><span class="go">→</span></a>
+    <a class="game" href="4-tune-the-strategy.html"><span class="n">4</span><span><b>Tune the Strategy</b><span class="d">Can you avoid overfitting?</span></span><span class="go">→</span></a>
+  </nav>
+  <p class="note">Each game takes about a minute. Want your score on the prize leaderboard? Show your result to someone at the AlgoSoc stall.</p>
+  <a class="btn primary join" id="join" href="/*JOIN_URL*/" target="_blank" rel="noopener noreferrer">Follow / join AlgoSoc</a>
+  <p class="foot">No download, no sign-up. Scores are not collected.</p>
+</main>
+</body>
+</html>

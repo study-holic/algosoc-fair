@@ -1,0 +1,23 @@
+/* Phone layout: the two charts stack; each whole card is the tap target. */
+.m .g2 { gap: 0.5rem; }
+.m .g2-head { grid-template-columns: 4.5rem 1fr 4.5rem; }
+.m .g2-head .v { font-size: 1.5rem; }
+.m .g2-prompt { font-size: 1.25rem; }
+.m .g2-pair { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 0.6rem; }
+.m .g2-card { touch-action: manipulation; }
+.m .g2-card:not(.is-real):not(.is-fake) .g2-cap::before { content: "Tap if real"; color: var(--dim); font-family: var(--mono); font-size: 0.95rem; }
+.m .g2-card:not(.is-real):not(.is-fake) .g2-name, .m .g2-card:not(.is-real):not(.is-fake) .g2-meta { display: none; }
+.m .g2-cap { height: 3.3rem; padding: 0 0.8rem; }
+.m .g2-name { font-size: 1.15rem; min-height: 1.5rem; }
+.m .g2-meta { font-size: 0.8rem; }
+.m .g2-card.chose-ok, .m .g2-card.chose-bad { outline-width: 3px; outline-offset: -1px; }
+.m .g2-verdict { height: auto; min-height: 1.6rem; font-size: 1.05rem; }
+.m .g2-res th:nth-child(3), .m .g2-res td:nth-child(3),
+.m .g2-res th:nth-child(4), .m .g2-res td:nth-child(4),
+.m .g2-res th:nth-child(6), .m .g2-res td:nth-child(6) { display: none; }
+.m .g2-note { font-size: 0.9rem; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .m .g2-pair { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+  .m .g2-cap { height: 2.8rem; }
+  .m .g2-prompt { font-size: 1.1rem; }
+}

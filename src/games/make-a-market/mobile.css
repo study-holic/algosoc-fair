@@ -1,0 +1,40 @@
+/* Phone layout: one column; dice, quote, buttons, then the trade log. */
+.m .g3 { display: flex; flex-direction: column; gap: 0.6rem; }
+.m .g3-left { gap: 0.6rem; flex: none; }
+.m .g3-info .v { font-size: 1.4rem; }
+.m .g3-dice { gap: 0.9rem; margin-top: 0; }
+.m .die { width: 4.4rem; height: 4.4rem; }
+.m .die span { font-size: 1.8rem; }
+.m .pips { grid-template-columns: repeat(3, 0.8rem); grid-template-rows: repeat(3, 0.8rem); gap: 0.3rem; }
+.m .die-cap { font-size: 0.6rem; letter-spacing: 0.12em; height: 0.8rem; }
+.m .g3-ev { font-size: 0.9rem; }
+.m .g3-q { padding: 0.45rem 0 0.3rem; }
+.m .g3-px { font-size: 2.3rem; }
+.m .g3-q.small .g3-px { font-size: 1.5rem; line-height: 1.55; }
+.m .g3-q .label { font-size: 0.6rem; letter-spacing: 0.1em; }
+.m .g3-controls { grid-template-columns: repeat(4, 1fr); gap: 0.45rem; }
+.m .g3-controls .btn { min-height: 3.2rem; padding: 0; font-size: 0.95rem; }
+.m .g3-controls #g3-submit { grid-column: 1 / -1; min-height: 3.4rem; font-size: 1.1rem; }
+.m .g3-who { display: none; }
+.m .g3-right { flex: 1; min-height: 0; padding: 0.6rem 0.8rem; }
+.m .g3-log { font-size: 0.85rem; margin-top: 0.3rem; }
+.m .g3-log .ln { padding: 0.3rem 0; gap: 0.5rem; }
+.m .g3-log .ln .q { font-size: 0.7rem; width: 1.3rem; }
+.m .g3-log .ln.sum .r { font-size: 1.1rem; }
+.m .g3-foot { font-size: 0.9rem; padding-top: 0.4rem; min-height: 1.6rem; }
+.m .g3-lesson { font-size: 1rem; margin-top: 1rem; }
+.m .results .detail table.data th:nth-child(4), .m .results .detail table.data td:nth-child(4) { display: none; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .m .g3 { display: grid; grid-template-columns: 1fr 17rem; gap: 0.9rem; }
+  .m .g3-left { gap: 0.4rem; }
+  .m .g3-info .v { font-size: 1.1rem; }
+  .m .die { width: 3rem; height: 3rem; }
+  .m .die-wrap { width: 5.5rem; }
+  .m .pips { grid-template-columns: repeat(3, 0.55rem); grid-template-rows: repeat(3, 0.55rem); gap: 0.2rem; }
+  .m .g3-px { font-size: 1.7rem; }
+  .m .g3-q.small .g3-px { font-size: 1.2rem; line-height: 1.4; }
+  .m .g3-controls { grid-template-columns: repeat(4, 1fr) 1.5fr; }
+  .m .g3-controls #g3-submit { grid-column: auto; min-height: 3.2rem; }
+  .m .g3-controls .btn { min-height: max(3.2rem, 44px); }
+  .m .g3-right { min-height: 0; overflow: hidden; }
+}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'none'">
+<title>Scan to play · UoM AlgoSoc</title>
+<style>
+/* Printable stall sign. Print from the browser (A4, portrait, margins default). */
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #1e2429; color: #e6e6e6; font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; }
+.sign { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4vmin; padding: 5vmin; text-align: center; }
+.logo { width: 34vmin; height: 34vmin; position: relative; overflow: hidden; -webkit-mask-image: radial-gradient(closest-side, #000 88%, transparent 100%); mask-image: radial-gradient(closest-side, #000 88%, transparent 100%); }
+.logo img { position: absolute; width: 156%; left: -27.3%; top: -30.9%; }
+h1 { margin: 0; font-size: 9vmin; letter-spacing: 0.18em; font-weight: 700; }
+.qr { width: 58vmin; height: 58vmin; background: #e6e6e6; }
+.qr svg { width: 100%; height: 100%; display: block; }
+.url { font-family: Consolas, Menlo, ui-monospace, monospace; font-size: 3.2vmin; color: #e6e6e6; word-break: break-all; }
+.sub { font-size: 4vmin; color: #9a9a9a; letter-spacing: 0.2em; text-transform: uppercase; }
+@media print {
+  html, body { background: #fff; color: #000; }
+  .sign { min-height: auto; height: 270mm; }
+  .logo { filter: invert(1) grayscale(1); }
+  .url { color: #000; }
+  .sub { color: #333; }
+  .qr { background: #fff; }
+}
+</style>
+</head>
+<body>
+<div class="sign">
+  <div class="logo"><img alt="UoM Algorithmic Trading Society" src="/*LOGO*/"></div>
+  <h1>SCAN TO PLAY</h1>
+  <div class="qr">/*QR_SVG*/</div>
+  <div class="url">/*URL*/</div>
+  <div class="sub">No download required</div>
+</div>
+</body>
+</html>

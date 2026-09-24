@@ -1,0 +1,24 @@
+/* Phone layout: chart on top, then stats, two sliders and LOCK IN. Sliders take touch drags. */
+.m .g4 { display: flex; flex-direction: column; gap: 0.6rem; }
+.m .g4-chart { flex: 1; min-height: 13rem; }
+.m .g4-side { gap: 0.5rem; flex: none; }
+.m .g4-stats { gap: 0.3rem 0.8rem; }
+.m .g4-stats .kv .label { letter-spacing: 0.06em; }
+.m .g4-stats .v { font-size: 1.35rem; }
+.m .slider { padding: 0.5rem 0.8rem 0.3rem; touch-action: none; }
+.m .s-val b { font-size: 1.5rem; }
+.m .s-track { height: 3rem; margin: 0 0.7rem; }
+.m .s-thumb { width: 1.6rem; height: 2.2rem; margin: -1.1rem 0 0 -0.8rem; }
+.m .s-scale { font-size: 0.7rem; }
+.m .g4-side .btn.big { margin-top: 0.2rem; min-height: 3.6rem; font-size: 1.3rem; }
+.m .g4-res-table { margin-top: 0.6rem; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .m .g4 { display: grid; grid-template-columns: 1fr 17rem; gap: 0.9rem; }
+  .m .g4-chart { min-height: 0; }
+  .m .g4-side { gap: 0.35rem; overflow-y: auto; }
+  .m .g4-stats .v { font-size: 1.1rem; }
+  .m .slider { padding: 0.3rem 0.7rem 0.1rem; }
+  .m .s-val b { font-size: 1.2rem; }
+  .m .s-track { height: max(3rem, 44px); }
+  .m .g4-side .btn.big { min-height: max(3.2rem, 44px); font-size: 1.1rem; }
+}
